@@ -7,6 +7,8 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./front/.env.local
+    ports:
+      - "3000:3000"
     depends_on:
       - backend
 
@@ -16,3 +18,5 @@ services:
       dockerfile: Dockerfile
     env_file:
       - ./back/.env
+    ports:
+      - "80:80"
