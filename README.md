@@ -12,7 +12,7 @@ This project is designed to simplify the process of setting up a Tailscale VPN f
 
 This tool streamlines the management of your personal VPN infrastructure, making it easy to deploy, monitor, and clean up your Tailscale VPN nodes on Linode.
 
-![Linode VPN Setup Demo](@1006.gif)
+![Linode VPN Setup Demo](./1006.gif)
 
 ## Prerequisites
 
