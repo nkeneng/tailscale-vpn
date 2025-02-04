@@ -20,7 +20,7 @@ WORKDIR /root/
 
 COPY --from=builder /app/main .
 
-COPY .env .
+RUN echo "$ENV_FILE" | base64 -d > .env.local
 
 EXPOSE 80
 
