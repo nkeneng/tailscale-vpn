@@ -1,23 +1,30 @@
-# Use an official Node runtime as the base image
-FROM node:18-alpine
+FROM node:18-alpine AS builder
 
-# Set the working directory in the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+RUN npm install --legacy-peer-deps
 
-# Copy the rest of the application code
 COPY . .
 
-# Build the Next.js app
+ARG ENV_FILE
+
+RUN echo "$ENV_FILE" | base64 -d > .env.local
+
 RUN npm run build
 
-# Expose the port the app runs on
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Only copy the essential files from the build stage
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/next* ./
+
 EXPOSE 3000
 
-# Start the application
 CMD ["npm", "start"]

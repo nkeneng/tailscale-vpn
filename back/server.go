@@ -17,13 +17,11 @@ import (
 )
 
 func main() {
-	// Load environment variables from .env file
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
 
-	// Initialize Linode client
 	apiKey := os.Getenv("LINODE_API_KEY")
 	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: apiKey})
 	oauth2Transport := &oauth2.Transport{
@@ -36,13 +34,11 @@ func main() {
 
 	app := fiber.New()
 
-	// Use CORS middleware
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: os.Getenv("ALLOWED_ORIGINS"),
 		AllowHeaders: "Origin, Content-Type, Accept",
 	}))
 
-	// Route to list all running Linode instances
 	app.Get("/instances", func(c *fiber.Ctx) error {
 		instances, err := linodeClient.ListInstances(context.Background(), nil)
 		if err != nil {
@@ -53,7 +49,6 @@ func main() {
 		return c.JSON(instances)
 	})
 
-	// Route to create a new Linode instance
 	app.Post("/instances", func(c *fiber.Ctx) error {
 		var createOptions struct {
 			Region string `json:"region"`
@@ -64,7 +59,6 @@ func main() {
 			})
 		}
 
-		// Get environment variables
 		rootPass := os.Getenv("ROOT_PASSWORD")
 		authorizedUsers := strings.Split(os.Getenv("AUTHORIZED_USERS"), ",")
 		stackScriptID, err := strconv.Atoi(os.Getenv("STACKSCRIPT_ID"))
@@ -74,7 +68,6 @@ func main() {
 			})
 		}
 
-		// Create the instance
 		instance, err := linodeClient.CreateInstance(
 			context.Background(),
 			linodego.InstanceCreateOptions{
@@ -95,7 +88,6 @@ func main() {
 		return c.JSON(instance)
 	})
 
-	// Route to delete a Linode instance
 	app.Delete("/instances/:id", func(c *fiber.Ctx) error {
 		instanceID, err := strconv.Atoi(c.Params("id"))
 		if err != nil {

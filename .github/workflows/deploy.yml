@@ -1,0 +1,63 @@
+name: Deploy Tailscale App
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ vars.SERVER_IP }} >> ~/.ssh/known_hosts
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login registry.gitlab.com -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: Generate .env.local file for Build
+        run: |
+          echo "${{ secrets.ENV_FILE_FRONTEND }}" > .env.local
+
+      - name: Build and Push Front image
+        run: |
+          cd front &&
+          docker build --build-arg ENV_FILE="$(cat .env.local | base64 -w 0)" -t registry.gitlab.com/stevenas/tailscale-vpn-front:latest .
+          docker tag registry.gitlab.com/stevenas/tailscale-vpn-front:latest registry.gitlab.com/stevenas/tailscale-vpn-front:${{ github.sha }}
+          docker push registry.gitlab.com/stevenas/tailscale-vpn-front:latest
+          docker push registry.gitlab.com/stevenas/tailscale-vpn-front:${{ github.sha }}
+
+      - name: Build and Push Backend Image
+        run: |
+          cd back &&
+          docker build --build-arg ENV_FILE="$(cat .env.local | base64 -w 0)" -t registry.gitlab.com/stevenas/tailscale-vpn-back:latest .
+          docker tag registry.gitlab.com/stevenas/tailscale-vpn-back:latest registry.gitlab.com/stevenas/tailscale-vpn-back:${{ github.sha }}
+          docker push registry.gitlab.com/stevenas/tailscale-vpn-back:latest
+          docker push registry.gitlab.com/stevenas/tailscale-vpn-back:${{ github.sha }}
+
+      - name: Ensure Directory Exists on Server
+        run: ssh ${{ vars.SERVER_USER }}@${{ vars.SERVER_IP }} "mkdir -p ~/tailscale-vpn"
+
+      - name: Copy docker-stack.yml to Server
+        run: scp docker-stack.yml ${{ vars.SERVER_USER }}@${{ vars.SERVER_IP }}:~/tailscale-vpn/"
+
+      - name: Deploy to Server
+        run: ssh ${{ vars.SERVER_USER }}@${{ vars.SERVER_IP }} "
+          cd tailscale-vpn &&
+          docker pull registry.gitlab.com/stevenas/tailscale-vpn-front:${{ github.sha }} &&
+          docker pull registry.gitlab.com/stevenas/tailscale-vpn-back:${{ github.sha }} &&
+          if [ \$(docker service ls --filter name=tailscale_vpn_stack -q) ]; then
+            docker service update --image registry.gitlab.com/stevenas/tailscale-vpn-front:${{ github.sha }} tailscale_vpn_stack_front;
+            docker service update --image registry.gitlab.com/stevenas/tailscale-vpn-back:${{ github.sha }} tailscale_vpn_stack_back;
+          else
+            docker stack deploy -c docker-stack.yml tailscale_vpn_stack;
+          fi
+          "

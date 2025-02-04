@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  front:
+    image: registry.gitlab.com/stevenas/tailscale-vpn-front
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    networks:
+      app-network:
+      traefik_web_swarm:
+  
+  back:
+    image: registry.gitlab.com/stevenas/tailscale-vpn-back
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+    networks:
+      app-network:
+      traefik_web_swarm:
+
+
+networks:
+  traefik_web_swarm:
+    external: true
+  app-network:
+    driver: overlay
