@@ -10,7 +10,7 @@ COPY . .
 
 ARG ENV_FILE
 
-RUN echo "$ENV_FILE" | base64 -d > .env.local
+# RUN echo "$ENV_FILE" | base64 -d | sed 's/\\n/\n/g' > .env.local
 
 RUN npm run build
 

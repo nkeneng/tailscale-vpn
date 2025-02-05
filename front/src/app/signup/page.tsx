@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import Link from 'next/link'
 
+const BASE_URL = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'
+
 export default function Signup() {
     const [isLoading, setIsLoading] = useState(false)
     const [email, setEmail] = useState('')
@@ -22,7 +24,7 @@ export default function Signup() {
                 email,
                 password,
                 options: {
-                    emailRedirectTo: `${window.location.origin}/auth/callback`,
+                    emailRedirectTo: `${BASE_URL}/auth/callback`,
                 },
             })
             if (error) throw error
@@ -41,7 +43,7 @@ export default function Signup() {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
+                    redirectTo: `${BASE_URL}/auth/callback`,
                 },
             })
             if (error) throw error

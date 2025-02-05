@@ -5,6 +5,8 @@ import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
 import { Button } from "@/components/ui/button"
 
+const BASE_URL = process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'
+
 export default function Login() {
     const [isLoading, setIsLoading] = useState(false)
     const router = useRouter()
@@ -26,7 +28,7 @@ export default function Login() {
             const { error } = await supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: `${window.location.origin}/auth/callback`,
+                    redirectTo: `${BASE_URL}/auth/callback`,
                 },
             })
             if (error) throw error
