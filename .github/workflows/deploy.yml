@@ -37,12 +37,12 @@ jobs:
 
       - name: Generate .env.local file for Build
         run: |
-          echo "${{ secrets.ENV_FILE_BACKEND }}" > back/.env.local
+          echo "${{ secrets.ENV_FILE_BACKEND }}" > back/.env
 
       - name: Build and Push Backend Image
         run: |
           cd back &&
-          docker build --build-arg ENV_FILE="$(cat .env.local | base64 -w 0)" -t registry.gitlab.com/stevenas/tailscale-vpn-back:latest .
+          docker build --build-arg ENV_FILE="$(cat .env | base64 -w 0)" -t registry.gitlab.com/stevenas/tailscale-vpn-back:latest .
           docker tag registry.gitlab.com/stevenas/tailscale-vpn-back:latest registry.gitlab.com/stevenas/tailscale-vpn-back:${{ github.sha }}
           docker push registry.gitlab.com/stevenas/tailscale-vpn-back:latest
           docker push registry.gitlab.com/stevenas/tailscale-vpn-back:${{ github.sha }}

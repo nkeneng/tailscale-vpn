@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   front:
-    image: registry.gitlab.com/stevenas/tailscale-vpn-front
+    image: registry.gitlab.com/stevenas/tailscale-vpn
     deploy:
       replicas: 2
       update_config:
